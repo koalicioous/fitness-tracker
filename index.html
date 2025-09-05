@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fitness Progress Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .card {
+        background-color: white;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1),
+          0 2px 4px -2px rgb(0 0 0 / 0.1);
+      }
+      #settings-modal-content,
+      #confirm-modal-content {
+        transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+      }
+      .action-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 9999px;
+      }
+      .action-btn:hover {
+        background-color: #f1f5f9; /* slate-100 */
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+      <!-- Header -->
+      <header class="text-center mb-4">
+        <h1 class="text-3xl md:text-4xl font-bold text-slate-900">
+          My Fitness Journey
+        </h1>
+        <p class="text-slate-500 mt-2">
+          Track your progress towards a healthier you.
+        </p>
+      </header>
+
+      <!-- Settings Button -->
+      <div class="flex justify-end mb-4 px-4 md:px-0">
+        <button
+          id="open-settings-btn"
+          class="inline-flex items-center gap-2 bg-white text-slate-700 font-semibold py-2 px-4 rounded-md shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311a1.464 1.464 0 0 1-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413-1.4-2.397 0-2.81l.34-.1a1.464 1.464 0 0 1 .872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"
+            />
+          </svg>
+          <span>Settings</span>
+        </button>
+      </div>
+
+      <main class="space-y-8">
+        <!-- Goal & Status Section -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="card text-center">
+            <h3 class="text-md font-semibold text-slate-500">Target Weight</h3>
+            <p class="text-3xl font-bold text-sky-500" id="target-weight">
+              -- kg
+            </p>
+          </div>
+          <div class="card text-center">
+            <h3 class="text-md font-semibold text-slate-500">
+              Target Body Fat
+            </h3>
+            <p class="text-3xl font-bold text-sky-500" id="target-bf">-- %</p>
+          </div>
+          <div class="card text-center">
+            <h3 class="text-md font-semibold text-slate-500">Days Remaining</h3>
+            <p class="text-3xl font-bold text-sky-500" id="days-remaining">
+              --
+            </p>
+          </div>
+        </section>
+
+        <!-- Progress Overview Section -->
+        <section class="card">
+          <h2 class="text-xl font-bold mb-4">Progress Overview</h2>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="relative h-64 md:h-80">
+              <h3
+                class="font-semibold text-center mb-2 absolute top-0 left-0 right-0"
+              >
+                Weight Trend (kg)
+              </h3>
+              <canvas id="weightChart"></canvas>
+            </div>
+            <div class="relative h-64 md:h-80">
+              <h3
+                class="font-semibold text-center mb-2 absolute top-0 left-0 right-0"
+              >
+                Body Fat Trend (%)
+              </h3>
+              <canvas id="bodyFatChart"></canvas>
+            </div>
+          </div>
+          <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+              <h4 class="text-sm font-medium text-slate-500">Status</h4>
+              <p
+                id="status-badge"
+                class="font-bold text-lg p-2 rounded-md mt-1 transition-colors duration-500"
+              >
+                --
+              </p>
+            </div>
+            <div>
+              <h4 class="text-sm font-medium text-slate-500">Fat Mass Lost</h4>
+              <p id="fat-lost" class="font-bold text-lg mt-1">-- kg</p>
+            </div>
+            <div>
+              <h4 class="text-sm font-medium text-slate-500">Weight to Lose</h4>
+              <p id="weight-to-lose" class="font-bold text-lg mt-1">-- kg</p>
+            </div>
+            <div>
+              <h4 class="text-sm font-medium text-slate-500">
+                Body Fat to Drop
+              </h4>
+              <p id="bf-to-drop" class="font-bold text-lg mt-1">-- %</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Activity Summary Section -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="card text-center">
+            <h3 class="text-md font-semibold text-slate-500">
+              This Week's Running
+            </h3>
+            <p class="text-3xl font-bold text-emerald-500" id="weekly-running">
+              0 km
+            </p>
+          </div>
+          <div class="card text-center">
+            <h3 class="text-md font-semibold text-slate-500">
+              This Week's Training Volume
+            </h3>
+            <p class="text-3xl font-bold text-emerald-500" id="weekly-training">
+              0 kg
+            </p>
+          </div>
+        </section>
+
+        <!-- Log New Entry Section -->
+        <section id="log-section" class="card">
+          <h2 id="log-form-title" class="text-xl font-bold mb-4">
+            Log New Measurement & Activity
+          </h2>
+          <form id="log-form" class="grid grid-cols-2 gap-4 items-end">
+            <div class="col-span-2">
+              <label for="date" class="block text-sm font-medium text-slate-600"
+                >Date</label
+              >
+              <input
+                type="date"
+                id="date"
+                name="date"
+                required
+                class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+              />
+            </div>
+            <div>
+              <label
+                for="weight"
+                class="block text-sm font-medium text-slate-600"
+                >Weight (kg)</label
+              >
+              <input
+                type="number"
+                id="weight"
+                name="weight"
+                step="0.1"
+                required
+                class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+              />
+            </div>
+            <div>
+              <label
+                for="bodyfat"
+                class="block text-sm font-medium text-slate-600"
+                >Body Fat (%)</label
+              >
+              <input
+                type="number"
+                id="bodyfat"
+                name="bodyfat"
+                step="0.1"
+                required
+                class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+              />
+            </div>
+            <div>
+              <label
+                for="running"
+                class="block text-sm font-medium text-slate-600"
+                >Running (km)</label
+              >
+              <input
+                type="number"
+                id="running"
+                name="running"
+                step="0.1"
+                class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                placeholder="Optional"
+              />
+            </div>
+            <div>
+              <label
+                for="training"
+                class="block text-sm font-medium text-slate-600"
+                >Training Vol (kg)</label
+              >
+              <input
+                type="number"
+                id="training"
+                name="training"
+                step="1"
+                class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+                placeholder="Optional"
+              />
+            </div>
+            <div class="col-span-2 flex gap-4">
+              <button
+                id="log-form-submit-btn"
+                type="submit"
+                class="flex-1 w-full bg-sky-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors"
+              >
+                Log Progress
+              </button>
+              <button
+                id="log-form-cancel-btn"
+                type="button"
+                class="flex-1 w-full bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-md hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 transition-colors hidden"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- History Section -->
+        <section class="card">
+          <h2 class="text-xl font-bold mb-4">Measurement History</h2>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200">
+              <thead class="bg-slate-50">
+                <tr>
+                  <th
+                    class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                  >
+                    Date
+                  </th>
+                  <th
+                    class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                  >
+                    Weight
+                  </th>
+                  <th
+                    class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                  >
+                    Body Fat
+                  </th>
+                  <th
+                    class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                  >
+                    Change
+                  </th>
+                  <th
+                    class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                id="history-table-body"
+                class="bg-white divide-y divide-slate-200"
+              >
+                <!-- Rows will be injected here by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 3-Month Plan Section -->
+        <section class="card">
+          <h2 class="text-xl font-bold mb-6 text-center">
+            Your 3-Month Game Plan
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Diet Plan -->
+            <div class="space-y-4">
+              <h3 class="text-lg font-semibold text-sky-600 border-b pb-2">
+                Diet Plan
+              </h3>
+              <p class="text-sm text-slate-600">
+                <strong>Schedule:</strong> 18/6 Intermittent Fasting (12 PM - 8
+                PM eating window).
+              </p>
+              <p class="text-sm text-slate-600">
+                <strong>Target:</strong> ~1800 calories per day.
+              </p>
+              <div>
+                <h4 class="font-semibold mb-2">Sample Meals:</h4>
+                <ul
+                  class="list-disc list-outside ml-5 text-sm space-y-2 text-slate-700"
+                >
+                  <li>
+                    <strong>Lunch (12:30 PM):</strong> 150g grilled chicken
+                    breast, rice, and stir-fried vegetables (e.g., Cah
+                    Kangkung).
+                  </li>
+                  <li>
+                    <strong>Snack (4:00 PM):</strong> 3 scrambled eggs or a bowl
+                    of oatmeal with fruit.
+                  </li>
+                  <li>
+                    <strong>Dinner (7:30 PM):</strong> 200g grilled chicken
+                    breast, brown rice, and steamed broccoli.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Strength Plan -->
+            <div class="space-y-4">
+              <h3 class="text-lg font-semibold text-emerald-600 border-b pb-2">
+                Strength Plan (3x/week)
+              </h3>
+              <div>
+                <h4 class="font-semibold mb-2">Workout A:</h4>
+                <ul
+                  class="list-disc list-outside ml-5 text-sm space-y-1 text-slate-700"
+                >
+                  <li>Barbell Squats: 4 sets of 6-8 reps</li>
+                  <li>Bench Press: 4 sets of 6-8 reps</li>
+                  <li>Bent-Over Rows: 4 sets of 6-8 reps</li>
+                  <li>Overhead Press: 3 sets of 8-10 reps</li>
+                </ul>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-2">Workout B:</h4>
+                <ul
+                  class="list-disc list-outside ml-5 text-sm space-y-1 text-slate-700"
+                >
+                  <li>Deadlifts: 4 sets of 5 reps</li>
+                  <li>Pull-Ups / Lat Pulldowns: 4 sets of 8-10 reps</li>
+                  <li>Dumbbell Lunges: 3 sets of 10 reps/leg</li>
+                  <li>Push-Ups: 3 sets to failure</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Running Plan -->
+            <div class="space-y-4">
+              <h3 class="text-lg font-semibold text-amber-600 border-b pb-2">
+                Running Plan (3x/week)
+              </h3>
+              <div>
+                <h4 class="font-semibold mb-2">Month 1 (Base Building):</h4>
+                <p class="text-sm text-slate-700">
+                  ~15-20 km/week. Focus on easy, conversational paces.
+                </p>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-2">Month 2 (Endurance):</h4>
+                <p class="text-sm text-slate-700">
+                  ~20-25 km/week. Introduce interval runs (e.g., 4x400m fast).
+                </p>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-2">Month 3 (Performance):</h4>
+                <p class="text-sm text-slate-700">
+                  ~25-30 km/week. Add tempo runs (3km at a "comfortably hard"
+                  pace).
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="mt-8 pt-4 border-t text-center">
+            <h3 class="text-lg font-semibold mb-2">
+              Suggested Weekly Schedule
+            </h3>
+            <p class="text-sm text-slate-600">
+              <strong>Mon:</strong> Strength A | <strong>Tue:</strong> Run |
+              <strong>Wed:</strong> Strength B | <strong>Thu:</strong> Run |
+              <strong>Fri:</strong> Strength A | <strong>Sat:</strong> Long Run
+              | <strong>Sun:</strong> Rest
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modals -->
+    <div
+      id="settings-modal"
+      class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center p-4 z-50"
+    >
+      <div
+        id="settings-modal-content"
+        class="card w-full max-w-2xl transform transition-all scale-95 opacity-0"
+      >
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-bold">Goals &amp; Configuration</h2>
+          <button
+            id="close-settings-btn"
+            class="text-3xl font-light leading-none text-slate-400 hover:text-slate-800"
+          >
+            &times;
+          </button>
+        </div>
+        <form
+          id="settings-form"
+          class="grid grid-cols-2 md:grid-cols-4 gap-4 items-end"
+        >
+          <div>
+            <label
+              for="setting-end-date"
+              class="block text-sm font-medium text-slate-600"
+              >End Date</label
+            >
+            <input
+              type="date"
+              id="setting-end-date"
+              class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+            />
+          </div>
+          <div>
+            <label
+              for="setting-target-weight"
+              class="block text-sm font-medium text-slate-600"
+              >Target Weight (kg)</label
+            >
+            <input
+              type="number"
+              step="0.1"
+              id="setting-target-weight"
+              class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+            />
+          </div>
+          <div>
+            <label
+              for="setting-target-bf"
+              class="block text-sm font-medium text-slate-600"
+              >Target BF (%)</label
+            >
+            <input
+              type="number"
+              step="0.1"
+              id="setting-target-bf"
+              class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-sky-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors"
+          >
+            Save Settings
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div
+      id="confirm-modal"
+      class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center p-4 z-50"
+    >
+      <div
+        id="confirm-modal-content"
+        class="card w-full max-w-sm transform transition-all scale-95 opacity-0"
+      >
+        <h3 class="text-lg font-bold text-slate-900">Confirm Deletion</h3>
+        <p class="text-sm text-slate-600 mt-2">
+          Are you sure you want to delete this entry? This action cannot be
+          undone.
+        </p>
+        <div class="mt-6 flex justify-end gap-4">
+          <button
+            id="confirm-cancel-btn"
+            class="bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-md hover:bg-slate-300 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            id="confirm-delete-btn"
+            class="bg-red-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-red-600 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- DOM ELEMENTS ---
+        const logForm = document.getElementById("log-form");
+        const dateInput = document.getElementById("date");
+        const settingsForm = document.getElementById("settings-form");
+        const logFormTitle = document.getElementById("log-form-title");
+        const logFormSubmitBtn = document.getElementById("log-form-submit-btn");
+        const logFormCancelBtn = document.getElementById("log-form-cancel-btn");
+
+        // Modals & Buttons
+        const openSettingsBtn = document.getElementById("open-settings-btn");
+        const closeSettingsBtn = document.getElementById("close-settings-btn");
+        const settingsModal = document.getElementById("settings-modal");
+        const settingsModalContent = document.getElementById(
+          "settings-modal-content"
+        );
+        const confirmModal = document.getElementById("confirm-modal");
+        const confirmModalContent = document.getElementById(
+          "confirm-modal-content"
+        );
+        const confirmCancelBtn = document.getElementById("confirm-cancel-btn");
+        const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
+
+        // Display Elements
+        const targetWeightEl = document.getElementById("target-weight");
+        const targetBfEl = document.getElementById("target-bf");
+        const daysRemainingEl = document.getElementById("days-remaining");
+        const weeklyRunningEl = document.getElementById("weekly-running");
+        const weeklyTrainingEl = document.getElementById("weekly-training");
+        const statusBadge = document.getElementById("status-badge");
+        const fatLostEl = document.getElementById("fat-lost");
+        const weightToLoseEl = document.getElementById("weight-to-lose");
+        const bfToDropEl = document.getElementById("bf-to-drop");
+        const historyTableBody = document.getElementById("history-table-body");
+
+        // Settings Form Inputs
+        const settingEndDateInput = document.getElementById("setting-end-date");
+        const settingTargetWeightInput = document.getElementById(
+          "setting-target-weight"
+        );
+        const settingTargetBfInput =
+          document.getElementById("setting-target-bf");
+
+        // Chart instances
+        let weightChart = null;
+        let bodyFatChart = null;
+
+        let progressHistory = [];
+        let settings = {};
+        let editingDate = null;
+        let dateToDelete = null;
+
+        // --- DATA FUNCTIONS ---
+        function saveAllData() {
+          localStorage.setItem(
+            "fitnessProgressHistory",
+            JSON.stringify(progressHistory)
+          );
+          localStorage.setItem("fitnessSettings", JSON.stringify(settings));
+        }
+
+        function loadSettings() {
+          const savedSettings = localStorage.getItem("fitnessSettings");
+          const defaultEndDate = new Date("2025-09-05");
+          defaultEndDate.setDate(defaultEndDate.getDate() + 84);
+
+          const defaults = {
+            targetWeight: 61.8,
+            targetBodyFat: 15.0,
+            endDate: defaultEndDate.toISOString().split("T")[0],
+          };
+
+          settings = savedSettings ? JSON.parse(savedSettings) : defaults;
+
+          settingEndDateInput.value = settings.endDate;
+          settingTargetWeightInput.value = settings.targetWeight;
+          settingTargetBfInput.value = settings.targetBodyFat;
+        }
+
+        function loadHistory() {
+          const savedData = localStorage.getItem("fitnessProgressHistory");
+          const defaultEntry = {
+            date: "2025-09-05",
+            weight: 68.1,
+            bodyFat: 22.9,
+            running: 0,
+            training: 0,
+          };
+          progressHistory =
+            savedData && savedData !== "[]"
+              ? JSON.parse(savedData)
+              : [defaultEntry];
+        }
+
+        function calculateFatMass(weight, bodyFat) {
+          return weight * (bodyFat / 100);
+        }
+
+        // --- UI UPDATE FUNCTIONS ---
+        function updateDashboard() {
+          if (progressHistory.length === 0) {
+            // Handle empty state if needed, maybe clear charts or show a message
+            return;
+          }
+
+          progressHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+          const chronHistory = [...progressHistory].sort(
+            (a, b) => new Date(a.date) - new Date(b.date)
+          );
+          const latestEntry = progressHistory[0];
+          const startEntry = chronHistory[0];
+
+          // Calculations
+          const startFatMass = calculateFatMass(
+            startEntry.weight,
+            startEntry.bodyFat
+          );
+          const currentFatMass = calculateFatMass(
+            latestEntry.weight,
+            latestEntry.bodyFat
+          );
+          const totalFatLost = startFatMass - currentFatMass;
+
+          const startDate = new Date(startEntry.date);
+          const today = new Date();
+          const endDate = new Date(settings.endDate);
+          const totalDuration = Math.max(
+            1,
+            Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24))
+          );
+          const daysPassed = Math.max(
+            0,
+            Math.floor(
+              (new Date(today.setHours(0, 0, 0, 0)) - startDate) /
+                (1000 * 60 * 60 * 24)
+            )
+          );
+          const daysRemaining = Math.max(
+            0,
+            Math.floor((endDate - today) / (1000 * 60 * 60 * 24))
+          );
+
+          // Status Logic
+          const totalFatToLoseGoal =
+            startFatMass -
+            calculateFatMass(settings.targetWeight, settings.targetBodyFat);
+          const expectedFatLossPerDay =
+            totalFatToLoseGoal > 0 ? totalFatToLoseGoal / totalDuration : 0;
+          const expectedFatLossToday = expectedFatLossPerDay * daysPassed;
+
+          let onTrackStatus = "ON TRACK";
+          let statusColor = "bg-green-100 text-green-800";
+
+          if (
+            totalFatLost < expectedFatLossToday &&
+            daysPassed > 0 &&
+            today < endDate
+          ) {
+            onTrackStatus = "OFF TRACK";
+            statusColor = "bg-amber-100 text-amber-800";
+          }
+          if (
+            today > endDate &&
+            (latestEntry.weight > settings.targetWeight ||
+              latestEntry.bodyFat > settings.targetBodyFat)
+          ) {
+            onTrackStatus = "INCOMPLETE";
+            statusColor = "bg-red-100 text-red-800";
+          }
+
+          // Weekly Activity
+          const now = new Date();
+          const dayOfWeek = now.getDay();
+          const startOfWeek = new Date(now);
+          startOfWeek.setDate(
+            now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)
+          );
+          startOfWeek.setHours(0, 0, 0, 0);
+
+          const weeklyEntries = progressHistory.filter(
+            (entry) => new Date(entry.date) >= startOfWeek
+          );
+          const weeklyRunning = weeklyEntries.reduce(
+            (sum, entry) => sum + (Number(entry.running) || 0),
+            0
+          );
+          const weeklyTraining = weeklyEntries.reduce(
+            (sum, entry) => sum + (Number(entry.training) || 0),
+            0
+          );
+
+          // Update UI Text
+          targetWeightEl.textContent = `${settings.targetWeight.toFixed(1)} kg`;
+          targetBfEl.textContent = `${settings.targetBodyFat.toFixed(1)} %`;
+          daysRemainingEl.textContent = daysRemaining;
+          weeklyRunningEl.textContent = `${weeklyRunning.toFixed(1)} km`;
+          weeklyTrainingEl.textContent = `${weeklyTraining.toLocaleString()} kg`;
+          statusBadge.textContent = onTrackStatus;
+          statusBadge.className = `font-bold text-lg p-2 rounded-md mt-1 transition-colors duration-500 ${statusColor}`;
+          fatLostEl.textContent = `${totalFatLost.toFixed(2)} kg`;
+          weightToLoseEl.textContent = `${Math.max(
+            0,
+            latestEntry.weight - settings.targetWeight
+          ).toFixed(1)} kg`;
+          bfToDropEl.textContent = `${Math.max(
+            0,
+            latestEntry.bodyFat - settings.targetBodyFat
+          ).toFixed(1)} %`;
+
+          renderCharts(chronHistory);
+          renderHistoryTable();
+        }
+
+        function renderHistoryTable() {
+          historyTableBody.innerHTML = "";
+          progressHistory.forEach((entry, i) => {
+            const prevEntry = progressHistory[i + 1];
+            let changeHtml = "--";
+            if (prevEntry) {
+              const weightChange = entry.weight - prevEntry.weight;
+              const bfChange = entry.bodyFat - prevEntry.bodyFat;
+              changeHtml = `
+                            <span class="${
+                              weightChange > 0
+                                ? "text-red-500"
+                                : "text-green-500"
+                            }">${weightChange > 0 ? "▲" : "▼"} ${Math.abs(
+                weightChange
+              ).toFixed(1)} kg</span> / 
+                            <span class="${
+                              bfChange > 0 ? "text-red-500" : "text-green-500"
+                            }">${bfChange > 0 ? "▲" : "▼"} ${Math.abs(
+                bfChange
+              ).toFixed(1)}%</span>`;
+            }
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${new Date(
+                          entry.date
+                        ).toLocaleDateString("en-CA")}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-500">${entry.weight.toFixed(
+                          1
+                        )} kg</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-500">${entry.bodyFat.toFixed(
+                          1
+                        )}%</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${changeHtml}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-500">
+                            <div class="flex items-center gap-2">
+                                <button class="action-btn edit-btn" data-date="${
+                                  entry.date
+                                }" title="Edit">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="text-sky-600" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg>
+                                </button>
+                                <button class="action-btn delete-btn" data-date="${
+                                  entry.date
+                                }" title="Delete">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="text-red-600" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+            historyTableBody.appendChild(row);
+          });
+        }
+
+        function renderCharts(chronHistory) {
+          const labels = chronHistory.map((d) =>
+            new Date(d.date).toLocaleDateString("en-GB")
+          );
+          const weightData = chronHistory.map((d) => d.weight);
+          const bodyFatData = chronHistory.map((d) => d.bodyFat);
+
+          const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: false,
+                ticks: {
+                  padding: 10,
+                },
+              },
+              x: {
+                ticks: {
+                  padding: 10,
+                },
+              },
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                mode: "index",
+                intersect: false,
+              },
+            },
+            interaction: { intersect: false, mode: "index" },
+          };
+
+          if (weightChart) weightChart.destroy();
+          weightChart = new Chart(document.getElementById("weightChart"), {
+            type: "line",
+            data: {
+              labels,
+              datasets: [
+                {
+                  data: weightData,
+                  borderColor: "rgb(14, 165, 233)",
+                  tension: 0.1,
+                  borderWidth: 2,
+                  pointBackgroundColor: "rgb(14, 165, 233)",
+                  pointRadius: 4,
+                  pointHoverRadius: 6,
+                },
+              ],
+            },
+            options: chartOptions,
+          });
+
+          if (bodyFatChart) bodyFatChart.destroy();
+          bodyFatChart = new Chart(document.getElementById("bodyFatChart"), {
+            type: "line",
+            data: {
+              labels,
+              datasets: [
+                {
+                  data: bodyFatData,
+                  borderColor: "rgb(16, 185, 129)",
+                  tension: 0.1,
+                  borderWidth: 2,
+                  pointBackgroundColor: "rgb(16, 185, 129)",
+                  pointRadius: 4,
+                  pointHoverRadius: 6,
+                },
+              ],
+            },
+            options: chartOptions,
+          });
+        }
+
+        // --- EVENT HANDLERS ---
+        function handleLogSubmit(event) {
+          event.preventDefault();
+          const newEntryData = {
+            date: dateInput.value,
+            weight: parseFloat(document.getElementById("weight").value),
+            bodyFat: parseFloat(document.getElementById("bodyfat").value),
+            running: parseFloat(document.getElementById("running").value) || 0,
+            training:
+              parseFloat(document.getElementById("training").value) || 0,
+          };
+
+          if (editingDate) {
+            const index = progressHistory.findIndex(
+              (e) => e.date === editingDate
+            );
+            if (index !== -1) progressHistory[index] = newEntryData;
+          } else {
+            const existingIndex = progressHistory.findIndex(
+              (e) => e.date === newEntryData.date
+            );
+            if (existingIndex !== -1)
+              progressHistory[existingIndex] = newEntryData;
+            else progressHistory.push(newEntryData);
+          }
+
+          saveAllData();
+          updateDashboard();
+          resetLogForm();
+        }
+
+        function handleSettingsSubmit(event) {
+          event.preventDefault();
+          settings.endDate = settingEndDateInput.value;
+          settings.targetWeight = parseFloat(settingTargetWeightInput.value);
+          settings.targetBodyFat = parseFloat(settingTargetBfInput.value);
+          saveAllData();
+          updateDashboard();
+          closeModal(settingsModal, settingsModalContent);
+        }
+
+        function handleHistoryTableClick(event) {
+          const target = event.target.closest("button");
+          if (!target) return;
+
+          const date = target.dataset.date;
+          if (target.classList.contains("edit-btn")) {
+            startEditing(date);
+          } else if (target.classList.contains("delete-btn")) {
+            confirmDeletion(date);
+          }
+        }
+
+        function startEditing(date) {
+          const entry = progressHistory.find((e) => e.date === date);
+          if (!entry) return;
+
+          editingDate = date;
+          dateInput.value = entry.date;
+          document.getElementById("weight").value = entry.weight;
+          document.getElementById("bodyfat").value = entry.bodyFat;
+          document.getElementById("running").value = entry.running;
+          document.getElementById("training").value = entry.training;
+
+          logFormTitle.textContent = "Edit Measurement & Activity";
+          logFormSubmitBtn.textContent = "Update Entry";
+          logFormCancelBtn.classList.remove("hidden");
+
+          document
+            .getElementById("log-section")
+            .scrollIntoView({ behavior: "smooth" });
+        }
+
+        function resetLogForm() {
+          editingDate = null;
+          logForm.reset();
+          dateInput.valueAsDate = new Date();
+          logFormTitle.textContent = "Log New Measurement & Activity";
+          logFormSubmitBtn.textContent = "Log Progress";
+          logFormCancelBtn.classList.add("hidden");
+        }
+
+        function confirmDeletion(date) {
+          dateToDelete = date;
+          openModal(confirmModal, confirmModalContent);
+        }
+
+        function deleteEntry() {
+          if (!dateToDelete) return;
+          progressHistory = progressHistory.filter(
+            (e) => e.date !== dateToDelete
+          );
+          saveAllData();
+          updateDashboard();
+          closeModal(confirmModal, confirmModalContent);
+          dateToDelete = null;
+        }
+
+        function openModal(modal, content) {
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+          setTimeout(() => {
+            content.classList.remove("scale-95", "opacity-0");
+          }, 10);
+        }
+
+        function closeModal(modal, content) {
+          content.classList.add("scale-95", "opacity-0");
+          setTimeout(() => {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }, 300);
+        }
+
+        // --- INITIALIZATION ---
+        function init() {
+          loadSettings();
+          loadHistory();
+          dateInput.valueAsDate = new Date();
+          logForm.addEventListener("submit", handleLogSubmit);
+          settingsForm.addEventListener("submit", handleSettingsSubmit);
+          historyTableBody.addEventListener("click", handleHistoryTableClick);
+          logFormCancelBtn.addEventListener("click", resetLogForm);
+
+          openSettingsBtn.addEventListener("click", () =>
+            openModal(settingsModal, settingsModalContent)
+          );
+          closeSettingsBtn.addEventListener("click", () =>
+            closeModal(settingsModal, settingsModalContent)
+          );
+          settingsModal.addEventListener(
+            "click",
+            (e) =>
+              e.target === settingsModal &&
+              closeModal(settingsModal, settingsModalContent)
+          );
+
+          confirmCancelBtn.addEventListener("click", () =>
+            closeModal(confirmModal, confirmModalContent)
+          );
+          confirmDeleteBtn.addEventListener("click", deleteEntry);
+          confirmModal.addEventListener(
+            "click",
+            (e) =>
+              e.target === confirmModal &&
+              closeModal(confirmModal, confirmModalContent)
+          );
+
+          updateDashboard();
+        }
+
+        init();
+      });
+    </script>
+  </body>
+</html>
